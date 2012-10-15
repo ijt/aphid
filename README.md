@@ -6,10 +6,6 @@ Helpful hints for Catkin/CMake output
 Installing
 ----------
 
-	go get .
-
-or
-
 	go get github.com/ijt/catkin_sleuth
 
 Running
