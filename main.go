@@ -84,9 +84,9 @@ func addHelp(reader *bufio.Reader, conf *Config) {
 		for _, rule := range(conf.Line_rules) {
 			matched := rule.patternRx.MatchString(line)
 			if matched {
-				// FIXME: Substitute positional references from
-				// regexp
-				fmt.Print(conf.Message_prefix, " ", rule.Message)	
+				msg := rule.patternRx.ReplaceAllString(
+					     line, rule.Message)
+				fmt.Print(conf.Message_prefix, " ", msg)
 			}
 		}
 	}
