@@ -29,13 +29,20 @@ func main() {
 				 "URL of config file in YAML format")
 	flag.Parse()
 
-	config := loadConfig(*configUrl)
+	config := compileRegexes(parseConfig(fetch(*configUrl)))
 	addHelp(bufio.NewReader(os.Stdin), config)
 }
 
-func loadConfig(url string) *Config {
-	// Download the config file from a well-known location
-	resp, err := http.Get(url)
+// fetch gets the contents at a given URL. The URL can point to a local file.
+// Errors terminate.
+func fetch(url string) []byte {
+	// Make a client that can load files if given a file:// URL.
+	t := &http.Transport{}
+	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
+	c := &http.Client{Transport: t}
+
+	// Download the config file from a well-known location.
+	resp, err := c.Get(url)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -47,9 +54,12 @@ func loadConfig(url string) *Config {
 		os.Exit(1)
 	}
 
-	// Parse the config file
+	return body
+}
+
+func parseConfig(body []byte) *Config {
 	conf := &Config {}
-	err = goyaml.Unmarshal(body, conf)
+	err := goyaml.Unmarshal(body, conf)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -58,8 +68,10 @@ func loadConfig(url string) *Config {
 	if conf.Message_prefix == "" {
 		conf.Message_prefix = "  " + Bold + FgCyan + "[catkin_sleuth]" + Reset
 	}
+	return conf
+}
 
-	// Compile the regexes
+func compileRegexes(conf *Config) *Config {
 	for _, rule := range conf.Line_rules {
 		rule.patternRx = regexp.MustCompile(rule.Pattern)
 		if rule.patternRx == nil {
@@ -67,10 +79,11 @@ func loadConfig(url string) *Config {
 			os.Exit(1)
 		}
 	}
-
 	return conf
 }
 
+// addHelp reads lines from a reader and prints them to stdout. It interjects
+// helpful messages when those lines match patterns given by the config.
 func addHelp(reader *bufio.Reader, conf *Config) {
 	for {
 		line, err := reader.ReadString('\n')
