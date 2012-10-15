@@ -1,6 +1,7 @@
 line_rules:
     - pattern: Could not find a configuration file for package (\w+)
-      message:
-            Did you install $1?
-            Did you run build/buildspace/setup.sh?
+      message: Did you install $1?
+
+    - pattern: Could not find a configuration file for package (\w+)
+      message: Did you run build/buildspace/setup.sh?
 
