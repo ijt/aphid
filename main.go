@@ -3,59 +3,76 @@ package main;
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
+	"launchpad.net/goyaml"
+	"net/http"
 	"os"
-	"strings"
-	"unicode"
+	"regexp"
 )
 
-func main() {
-	sections := make(chan []string)
-	go sectionize(bufio.NewReader(os.Stdin), sections)
-	sections2 := make(chan []string)
-	go addHelpToSections(sections, sections2)
-	printSections(sections2)
+type Config struct {
+	line_rules []LineRule
 }
 
-func sectionize(reader *bufio.Reader, sections chan []string) {
-	var section []string;
+type LineRule struct {
+	pattern string
+	patternRx *regexp.Regexp
+	message string
+}
+
+func main() {
+	config := loadConfig()
+	addHelp(bufio.NewReader(os.Stdin), config)
+}
+
+func loadConfig() *Config {
+	// Download the config file from a well-known location
+	url := "https://raw.github.com/ijt/catkin_sleuth/config/config.yaml"
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Parse the config file
+	conf := &Config {}
+	err = goyaml.Unmarshal(body, conf)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Compile the regexes
+	for _, rule := range conf.line_rules {
+		rule.patternRx = regexp.MustCompile(rule.pattern)
+	}
+
+	fmt.Fprintf(os.Stderr, "body:\n%v\n", string(body))
+	fmt.Fprintf(os.Stderr, "Config:\n%v\n", conf)
+
+	return conf
+}
+
+func addHelp(reader *bufio.Reader, conf *Config) {
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			break
 		}
-		line = strings.TrimRightFunc(line, unicode.IsSpace)
-		if len(line) > 1 && line[0] != ' ' {
-			if section != nil {
-				sections <- section
+		fmt.Print(line)
+		for _, rule := range(conf.line_rules) {
+			matched := rule.patternRx.MatchString(line)
+			if matched {
+				// FIXME: Substitute positional references from
+				// regexp
+				fmt.Println(rule.message)	
 			}
-			a := []string {line}
-			section = a[:]
-		} else {
-			section = append(section, line)
-		}
-	}
-	close(sections)
-}
-
-func addHelpToSections(sections chan []string, sections2 chan []string) {
-	for s := range(sections) {
-		pattern := "Could not find a configuration file for package"
-		if len(s) >= 2 && strings.Contains(s[1], pattern) {
-			s = append(s, "")
-			s = append(s, "  [cmake_sleuth] Did you install this package?")
-			s = append(s, "  [cmake_sleuth] Did you run build/buildspace/setup.sh?")
-			s = append(s, "")
-		}
-
-		sections2 <- s
-	}
-	close(sections2)
-}
-
-func printSections(sections chan []string) {
-	for s := range(sections) {
-		for _, line := range(s) {
-			fmt.Println(line)
 		}
 	}
 }
