@@ -56,7 +56,7 @@ func loadConfig(url string) *Config {
 	}
 
 	if conf.Message_prefix == "" {
-		conf.Message_prefix = "  " + FgCyan + "[catkin_sleuth]" + Reset
+		conf.Message_prefix = "  " + Bold + FgCyan + "[catkin_sleuth]" + Reset
 	}
 
 	// Compile the regexes
@@ -96,7 +96,7 @@ func addHelp(reader *bufio.Reader, conf *Config) {
 // https://groups.google.com/forum/?fromgroups=#!topic/golang-nuts/99MKtEkvQ2c
 const (
         Reset = "\x1b[0m"
-        Bright = "\x1b[1m"
+        Bold = "\x1b[1m"
         Dim = "\x1b[2m"
         Underscore = "\x1b[4m"
         Blink = "\x1b[5m"
