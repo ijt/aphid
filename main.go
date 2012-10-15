@@ -3,6 +3,7 @@ package main;
 import (
 	"bufio"
 	"fmt"
+	"flag"
 	"io/ioutil"
 	"launchpad.net/goyaml"
 	"net/http"
@@ -21,13 +22,17 @@ type LineRule struct {
 }
 
 func main() {
-	config := loadConfig()
+	defUrl := "https://raw.github.com/ijt/catkin_sleuth/config/config.yaml"
+	configUrl := flag.String("-c", defUrl,
+				 "URL of config file in YAML format")
+	flag.Parse()
+
+	config := loadConfig(*configUrl)
 	addHelp(bufio.NewReader(os.Stdin), config)
 }
 
-func loadConfig() *Config {
+func loadConfig(url string) *Config {
 	// Download the config file from a well-known location
-	url := "https://raw.github.com/ijt/catkin_sleuth/config/config.yaml"
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println(err)
