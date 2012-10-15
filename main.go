@@ -11,7 +11,7 @@ import (
 )
 
 type Config struct {
-	Line_rules []LineRule
+	Line_rules []*LineRule
 }
 
 type LineRule struct {
@@ -51,10 +51,11 @@ func loadConfig() *Config {
 	// Compile the regexes
 	for _, rule := range conf.Line_rules {
 		rule.patternRx = regexp.MustCompile(rule.Pattern)
+		if rule.patternRx == nil {
+			fmt.Println("Pattern failed to compile:", rule.Pattern)
+			os.Exit(1)
+		}
 	}
-
-	fmt.Fprintf(os.Stderr, "body:\n%v\n", string(body))
-	fmt.Fprintf(os.Stderr, "Config:\n%v\n", conf)
 
 	return conf
 }
@@ -64,6 +65,10 @@ func addHelp(reader *bufio.Reader, conf *Config) {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			break
+		}
+		if line == "" {
+			fmt.Fprintln(os.Stderr, "Line is null. Ending.")
+			os.Exit(1)
 		}
 		fmt.Print(line)
 		for _, rule := range(conf.Line_rules) {
