@@ -1,5 +1,5 @@
 line_rules:
-    - match: Could not find a configuration file for package (\w+)
+    - pattern: Could not find a configuration file for package (\w+)
       message:
             Did you install \1?
             Did you run build/buildspace/setup.sh?
