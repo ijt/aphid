@@ -73,7 +73,7 @@ func parseConfig(body []byte) *Config {
 
 func compileRegexes(conf *Config) *Config {
 	for _, rule := range conf.Line_rules {
-		rule.patternRx = regexp.MustCompile(rule.Pattern)
+		rule.patternRx = regexp.MustCompile(".*" + rule.Pattern + ".*")
 		if rule.patternRx == nil {
 			fmt.Println("Pattern failed to compile:", rule.Pattern)
 			os.Exit(1)
