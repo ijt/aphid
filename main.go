@@ -23,8 +23,9 @@ type LineRule struct {
 }
 
 func main() {
-	defUrl := "https://raw.github.com/ijt/catkin_sleuth/config/config.yaml"
-	configUrl := flag.String("c", defUrl,
+	defaultUrl := ("https://raw.github.com/ijt/catkin_sleuth/config/" +
+		       "config.yaml")
+	configUrl := flag.String("c", defaultUrl,
 				 "URL of config file in YAML format")
 	flag.Parse()
 
