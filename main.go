@@ -23,8 +23,7 @@ type LineRule struct {
 }
 
 func main() {
-	defaultUrl := ("https://raw.github.com/ijt/catkin_sleuth/config/" +
-		       "config.yaml")
+	defaultUrl := "https://raw.github.com/ijt/aphid/config/config.yaml"
 	configUrl := flag.String("c", defaultUrl,
 				 "URL of config file in YAML format")
 	flag.Parse()
@@ -66,7 +65,7 @@ func parseConfig(body []byte) *Config {
 	}
 
 	if conf.Message_prefix == "" {
-		conf.Message_prefix = "  " + Bold + FgCyan + "[catkin_sleuth]" + Reset
+		conf.Message_prefix = "  " + Bold + FgCyan + "[aphid]" + Reset
 	}
 	return conf
 }

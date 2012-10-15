@@ -1,18 +1,18 @@
-catkin sleuth
-=============
+Aphid
+=====
 
 Helpful hints for Catkin/CMake output
 
 Installing
 ----------
 
-	go get github.com/ijt/catkin_sleuth
+	go get github.com/ijt/aphid
 
 Running
 -------
 
-	cmake ../src 2>&1 | catkin_sleuth
+	cmake ../src 2>&1 | aphid
 
-Catkin sleuth will insert helpful hints for errors it recognizes in the output of CMake.
-These hints are marked with a prefix of [catkin_sleuth].
+Aphid will insert helpful hints for errors it recognizes in the output of CMake.
+These hints are marked with a prefix of [aphid].
 
