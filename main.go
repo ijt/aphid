@@ -11,13 +11,13 @@ import (
 )
 
 type Config struct {
-	line_rules []LineRule
+	Line_rules []LineRule
 }
 
 type LineRule struct {
-	pattern string
+	Pattern string
 	patternRx *regexp.Regexp
-	message string
+	Message string
 }
 
 func main() {
@@ -49,8 +49,8 @@ func loadConfig() *Config {
 	}
 
 	// Compile the regexes
-	for _, rule := range conf.line_rules {
-		rule.patternRx = regexp.MustCompile(rule.pattern)
+	for _, rule := range conf.Line_rules {
+		rule.patternRx = regexp.MustCompile(rule.Pattern)
 	}
 
 	fmt.Fprintf(os.Stderr, "body:\n%v\n", string(body))
@@ -66,12 +66,12 @@ func addHelp(reader *bufio.Reader, conf *Config) {
 			break
 		}
 		fmt.Print(line)
-		for _, rule := range(conf.line_rules) {
+		for _, rule := range(conf.Line_rules) {
 			matched := rule.patternRx.MatchString(line)
 			if matched {
 				// FIXME: Substitute positional references from
 				// regexp
-				fmt.Println(rule.message)	
+				fmt.Println(rule.Message)	
 			}
 		}
 	}
