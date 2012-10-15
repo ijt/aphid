@@ -92,6 +92,7 @@ func addHelp(reader *bufio.Reader, conf *Config) {
 	}
 }
 
+// https://groups.google.com/forum/?fromgroups=#!topic/golang-nuts/99MKtEkvQ2c
 const (
         Reset = "\x1b[0m"
         Bright = "\x1b[1m"
