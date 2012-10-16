@@ -14,3 +14,11 @@ func Test_parseConfig_returnsErrorOnNotFound(t *testing.T) {
 	}
 }
 
+func Test_parseConfig_returnsErrorOnEmpty(t *testing.T) {
+	msg := ""
+	_, err := parseConfig([]byte(msg))
+	if err == nil {
+		t.Error("No error returned for empty config.")
+	}
+}
+

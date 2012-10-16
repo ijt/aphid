@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"flag"
 	"io/ioutil"
-	"launchpad.net/goyaml"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
 )
+
+import "github.com/kylelemons/go-gypsy/yaml"
 
 type Config struct {
 	Message_prefix string
@@ -28,7 +30,12 @@ func main() {
 				 "URL of config file in YAML format")
 	flag.Parse()
 
-	config := compileRegexes(parseConfig(fetch(*configUrl)))
+	config, err := parseConfig(fetch(*configUrl))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	compileRegexes(config)
 	addHelp(bufio.NewReader(os.Stdin), config)
 }
 
@@ -53,21 +60,39 @@ func fetch(url string) []byte {
 		os.Exit(1)
 	}
 
+	log.Println(string(body))
+
 	return body
 }
 
-func parseConfig(body []byte) *Config {
+func parseConfig(body []byte) (*Config, error) {
 	conf := &Config {}
-	err := goyaml.Unmarshal(body, conf)
+	
+	yamlFile := yaml.Config(string(body))
+
+	count, err := yamlFile.Count("line_rules")
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return nil, err
+	}
+	conf.Line_rules = make([]*LineRule, count)
+	for i, _ := range conf.Line_rules {
+		pattern, err := yamlFile.Get(fmt.Sprintf("line_rules[%d].pattern", i))
+		if err != nil {
+			return nil, err
+		}
+
+		message, err := yamlFile.Get(fmt.Sprintf("line_rules[%d].message", i))
+		if err != nil {
+			return nil, err
+		}
+
+		conf.Line_rules[i] = &LineRule{ pattern, nil, message }
 	}
 
 	if conf.Message_prefix == "" {
 		conf.Message_prefix = "  " + Bold + FgCyan + "[aphid]" + Reset
 	}
-	return conf
+	return conf, nil
 }
 
 func compileRegexes(conf *Config) *Config {
