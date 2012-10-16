@@ -1,0 +1,17 @@
+  instead of 'parse_arguments(prefix option_names arg_names DEPENDENCIES;std_msgs;rosgraph_msgs)'
+  it is 'cmake_parse_arguments(prefix option_names single_arg_names multi_arg_names DEPENDENCIES;std_msgs;rosgraph_msgs))
+  and the variable containing not matched arguments must be changed form 'prefix_DEFAULT_ARGS' to 'prefix_UNPARSED_ARGUMENTS'
+-- roscpp: 28 messages, 5 services
+-- +++ add_subdirectory(filters)
+CMake Error at /opt/ros/groovy/share/catkin/cmake/catkinConfig.cmake:76 (find_package):
+  Could not find a configuration file for package pluginlib.
+
+  Set pluginlib_DIR to the directory containing a CMake configuration file
+  for pluginlib.  The file will have one of the following names:
+
+    pluginlibConfig.cmake
+    pluginlib-config.cmake
+
+Call Stack (most recent call first):
+  filters/CMakeLists.txt:4 (find_package)
+
