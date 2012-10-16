@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"flag"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -26,8 +25,10 @@ type LineRule struct {
 
 func main() {
 	defaultUrl := "https://raw.github.com/ijt/aphid/config/config.yaml"
+	defaultPrefix := "  " + Bold + FgCyan + "[aphid]" + Reset
 	configUrl := flag.String("c", defaultUrl,
 				 "URL of config file in YAML format")
+	prefix := flag.String("p", defaultPrefix, "Prefix for aphid messages")
 	flag.Parse()
 
 	config, err := parseConfig(fetch(*configUrl))
@@ -36,7 +37,7 @@ func main() {
 		os.Exit(1)
 	}
 	compileRegexes(config)
-	addHelp(bufio.NewReader(os.Stdin), config)
+	addHelp(bufio.NewReader(os.Stdin), config, *prefix)
 }
 
 // fetch gets the contents at a given URL. The URL can point to a local file.
@@ -60,20 +61,26 @@ func fetch(url string) []byte {
 		os.Exit(1)
 	}
 
-	log.Println(string(body))
-
 	return body
 }
 
-func parseConfig(body []byte) (*Config, error) {
-	conf := &Config {}
-	
-	yamlFile := yaml.Config(string(body))
+func parseConfig(body []byte) (conf *Config, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			conf = nil      // Clear return value.
+			err = e.(error) // Will re-panic if not an error.
+		}
+	}()
 
+	// Parse the YAML file.
+	yamlFile := yaml.Config(string(body))
 	count, err := yamlFile.Count("line_rules")
 	if err != nil {
 		return nil, err
 	}
+
+	// Extract the line rules.
+	conf = &Config {}
 	conf.Line_rules = make([]*LineRule, count)
 	for i, _ := range conf.Line_rules {
 		pattern, err := yamlFile.Get(fmt.Sprintf("line_rules[%d].pattern", i))
@@ -89,9 +96,6 @@ func parseConfig(body []byte) (*Config, error) {
 		conf.Line_rules[i] = &LineRule{ pattern, nil, message }
 	}
 
-	if conf.Message_prefix == "" {
-		conf.Message_prefix = "  " + Bold + FgCyan + "[aphid]" + Reset
-	}
 	return conf, nil
 }
 
@@ -108,7 +112,7 @@ func compileRegexes(conf *Config) *Config {
 
 // addHelp reads lines from a reader and prints them to stdout. It interjects
 // helpful messages when those lines match patterns given by the config.
-func addHelp(reader *bufio.Reader, conf *Config) {
+func addHelp(reader *bufio.Reader, conf *Config, prefix string) {
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
@@ -124,7 +128,7 @@ func addHelp(reader *bufio.Reader, conf *Config) {
 			if matched {
 				msg := rule.patternRx.ReplaceAllString(
 					     line, rule.Message)
-				fmt.Print(conf.Message_prefix, " ", msg)
+				fmt.Print(prefix, " ", msg)
 			}
 		}
 	}
