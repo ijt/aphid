@@ -31,7 +31,7 @@ func main() {
 	prefix := flag.String("p", defaultPrefix, "Prefix for aphid messages")
 	flag.Parse()
 
-	config, err := parseConfig(fetch(*configUrl))
+	config, err := parseConfig(fetch(*configUrl), *configUrl)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -64,33 +64,39 @@ func fetch(url string) []byte {
 	return body
 }
 
-func parseConfig(body []byte) (conf *Config, err error) {
+func parseConfig(body []byte, url string) (conf *Config, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			conf = nil      // Clear return value.
-			err = e.(error) // Will re-panic if not an error.
+			body := string(body)
+			if len(body) > 200 {
+				body = body[:200] + "..."
+			}
+			err = fmt.Errorf("Failed to parse config file at %s:\n\n%s",
+					 url, body)
 		}
 	}()
 
 	// Parse the YAML file.
 	yamlFile := yaml.Config(string(body))
-	count, err := yamlFile.Count("line_rules")
-	if err != nil {
-		return nil, err
+	count, e := yamlFile.Count("line_rules")
+	if e != nil {
+		err = fmt.Errorf("Could not get line_rules config section.")
+		return
 	}
 
 	// Extract the line rules.
 	conf = &Config {}
 	conf.Line_rules = make([]*LineRule, count)
 	for i, _ := range conf.Line_rules {
-		pattern, err := yamlFile.Get(fmt.Sprintf("line_rules[%d].pattern", i))
-		if err != nil {
-			return nil, err
+		pattern, e := yamlFile.Get(fmt.Sprintf("line_rules[%d].pattern", i))
+		if e != nil {
+			return nil, e
 		}
 
-		message, err := yamlFile.Get(fmt.Sprintf("line_rules[%d].message", i))
-		if err != nil {
-			return nil, err
+		message, e := yamlFile.Get(fmt.Sprintf("line_rules[%d].message", i))
+		if e != nil {
+			return nil, e
 		}
 
 		conf.Line_rules[i] = &LineRule{ pattern, nil, message }
