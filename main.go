@@ -13,14 +13,14 @@ import (
 import "github.com/kylelemons/go-gypsy/yaml"
 
 type Config struct {
-	Message_prefix string
-	Line_rules []*LineRule
+	messagePrefix string
+	lineRules []*LineRule
 }
 
 type LineRule struct {
-	Pattern string
+	pattern string
 	patternRx *regexp.Regexp
-	Message string
+	message string
 }
 
 func main() {
@@ -67,7 +67,8 @@ func fetch(url string) []byte {
 func parseConfig(body []byte, url string) (conf *Config, err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			conf = nil      // Clear return value.
+			// Clear return value.
+			conf = nil
 			body := string(body)
 			if len(body) > 200 {
 				body = body[:200] + "..."
@@ -79,37 +80,37 @@ func parseConfig(body []byte, url string) (conf *Config, err error) {
 
 	// Parse the YAML file.
 	yamlFile := yaml.Config(string(body))
-	count, e := yamlFile.Count("line_rules")
+	count, e := yamlFile.Count("lineRules")
 	if e != nil {
-		err = fmt.Errorf("Could not get line_rules config section.")
+		err = fmt.Errorf("Could not get lineRules config section.")
 		return
 	}
 
 	// Extract the line rules.
 	conf = &Config {}
-	conf.Line_rules = make([]*LineRule, count)
-	for i, _ := range conf.Line_rules {
-		pattern, e := yamlFile.Get(fmt.Sprintf("line_rules[%d].pattern", i))
+	conf.lineRules = make([]*LineRule, count)
+	for i, _ := range conf.lineRules {
+		pattern, e := yamlFile.Get(fmt.Sprintf("lineRules[%d].pattern", i))
 		if e != nil {
 			return nil, e
 		}
 
-		message, e := yamlFile.Get(fmt.Sprintf("line_rules[%d].message", i))
+		message, e := yamlFile.Get(fmt.Sprintf("lineRules[%d].message", i))
 		if e != nil {
 			return nil, e
 		}
 
-		conf.Line_rules[i] = &LineRule{ pattern, nil, message }
+		conf.lineRules[i] = &LineRule{ pattern, nil, message }
 	}
 
 	return conf, nil
 }
 
 func compileRegexes(conf *Config) *Config {
-	for _, rule := range conf.Line_rules {
-		rule.patternRx = regexp.MustCompile(".*" + rule.Pattern + ".*")
+	for _, rule := range conf.lineRules {
+		rule.patternRx = regexp.MustCompile(".*" + rule.pattern + ".*")
 		if rule.patternRx == nil {
-			fmt.Println("Pattern failed to compile:", rule.Pattern)
+			fmt.Println("pattern failed to compile:", rule.pattern)
 			os.Exit(1)
 		}
 	}
@@ -129,11 +130,11 @@ func addHelp(reader *bufio.Reader, conf *Config, prefix string) {
 			os.Exit(1)
 		}
 		fmt.Print(line)
-		for _, rule := range(conf.Line_rules) {
+		for _, rule := range(conf.lineRules) {
 			matched := rule.patternRx.MatchString(line)
 			if matched {
 				msg := rule.patternRx.ReplaceAllString(
-					     line, rule.Message)
+					     line, rule.message)
 				fmt.Print(prefix, " ", msg)
 			}
 		}
