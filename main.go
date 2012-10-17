@@ -13,7 +13,6 @@ import (
 import "github.com/kylelemons/go-gypsy/yaml"
 
 type Config struct {
-	messagePrefix string
 	lineRules []*LineRule
 }
 
