@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"flag"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -28,14 +29,17 @@ func main() {
 	configUrl := flag.String("c", defaultUrl,
 				 "URL of config file in YAML format")
 	prefix := flag.String("p", defaultPrefix, "Prefix for aphid messages")
+	strict := flag.Bool("s", false, "Be strict when parsing patterns")
 	flag.Parse()
 
 	config, err := parseConfig(fetch(*configUrl), *configUrl)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalln(err)
+	}
+	err = compileRegexes(config)
+	if err != nil && *strict {
 		os.Exit(1)
 	}
-	compileRegexes(config)
 	addHelp(bufio.NewReader(os.Stdin), config, *prefix)
 }
 
@@ -50,14 +54,12 @@ func fetch(url string) []byte {
 	// Download the config file from a well-known location.
 	resp, err := c.Get(url)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 
 	return body
@@ -105,15 +107,22 @@ func parseConfig(body []byte, url string) (conf *Config, err error) {
 	return conf, nil
 }
 
-func compileRegexes(conf *Config) *Config {
+// compileRegexes tries to compile all the regexes in the config.
+// If any of them fail, it returns the first error it found.
+func compileRegexes(conf *Config) error {
+	retErr := error(nil)
 	for _, rule := range conf.lineRules {
-		rule.patternRx = regexp.MustCompile(".*" + rule.pattern + ".*")
-		if rule.patternRx == nil {
-			fmt.Println("pattern failed to compile:", rule.pattern)
-			os.Exit(1)
+		rx, err := regexp.Compile(".*" + rule.pattern + ".*")
+		if err != nil {
+			log.Println(err)
+			if retErr != nil {
+				retErr = err
+			}
+		} else {
+			rule.patternRx = rx
 		}
 	}
-	return conf
+	return retErr
 }
 
 // addHelp reads lines from a reader and prints them to stdout. It interjects
