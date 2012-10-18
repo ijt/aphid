@@ -1,0 +1,15 @@
+if ! go test; then
+    exit 1
+fi
+
+echo
+for t in test/*.bash; do
+    echo -n "$t: "
+    if $t; then
+        echo ' Ok'
+    else
+        echo ' Failed'
+        exit 1
+    fi
+done
+
