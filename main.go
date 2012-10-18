@@ -81,9 +81,9 @@ func parseConfig(body []byte, url string) (conf *Config, err error) {
 
 	// Parse the YAML file.
 	yamlFile := yaml.Config(string(body))
-	count, e := yamlFile.Count("lineRules")
+	count, e := yamlFile.Count("line_rules")
 	if e != nil {
-		err = fmt.Errorf("Could not get lineRules config section.")
+		err = fmt.Errorf("Could not get line_rules config section.")
 		return
 	}
 
@@ -91,12 +91,12 @@ func parseConfig(body []byte, url string) (conf *Config, err error) {
 	conf = &Config {}
 	conf.lineRules = make([]*LineRule, count)
 	for i, _ := range conf.lineRules {
-		pattern, e := yamlFile.Get(fmt.Sprintf("lineRules[%d].pattern", i))
+		pattern, e := yamlFile.Get(fmt.Sprintf("line_rules[%d].pattern", i))
 		if e != nil {
 			return nil, e
 		}
 
-		message, e := yamlFile.Get(fmt.Sprintf("lineRules[%d].message", i))
+		message, e := yamlFile.Get(fmt.Sprintf("line_rules[%d].message", i))
 		if e != nil {
 			return nil, e
 		}
