@@ -6,6 +6,12 @@ Helpful hints for Catkin/CMake output
 Installing
 ----------
 
+Make sure you have Go installed. For example, on Ubuntu and Debian:
+
+    sudo apt-get install golang-go
+
+Then get aphid using the go tool:
+
 	go get github.com/ijt/aphid
 
 Running
