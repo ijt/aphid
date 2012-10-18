@@ -112,7 +112,7 @@ func parseConfig(body []byte, url string) (conf *Config, err error) {
 func compileRegexes(conf *Config) error {
 	retErr := error(nil)
 	for _, rule := range conf.lineRules {
-		rx, err := regexp.Compile(".*" + rule.pattern + ".*")
+		rx, err := regexp.Compile(rule.pattern)
 		if err != nil {
 			log.Println(err)
 			if retErr != nil {
@@ -141,9 +141,15 @@ func addHelp(reader *bufio.Reader, conf *Config, prefix string) {
 		for _, rule := range(conf.lineRules) {
 			matched := rule.patternRx.MatchString(line)
 			if matched {
-				msg := rule.patternRx.ReplaceAllString(
-					     line, rule.message)
-				fmt.Print(prefix, " ", msg)
+				pat := rule.patternRx
+				res := []byte {}
+				matches := pat.FindAllStringSubmatchIndex(line, -1)
+				for _, submatchRange := range matches { 
+					msg := rule.message + "\n"
+					res = pat.ExpandString(res, msg, line,
+							       submatchRange)
+				}
+				fmt.Print(prefix, " ", string(res))
 			}
 		}
 	}
